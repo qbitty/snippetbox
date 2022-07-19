@@ -37,10 +37,17 @@ func main() {
 
 	defer db.Close()
 
+	// Initialize a new template cache...
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		errLog.Fatal(err)
+	}
+
 	app := &config.Application{
-		ErrLog:   errLog,
-		InfoLog:  infoLog,
-		Snippets: &mysql.SnippetModel{DB: db},
+		ErrLog:        errLog,
+		InfoLog:       infoLog,
+		Snippets:      &mysql.SnippetModel{DB: db},
+		TemplateCache: templateCache,
 	}
 
 	// Use the http.ListenAndServe() function to start a new web server. We pas

@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
 	"github.com/qbitty/snippetbox/pkg/config"
+	"github.com/qbitty/snippetbox/pkg/models"
 )
 
 // Define a home handler function which writes a byte slice containing
@@ -18,24 +18,15 @@ func home(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		files := []string{
-			"./ui/html/home.page.tmpl",
-			"./ui/html/base.layout.tmpl",
-			"./ui/html/footer.partial.tmpl",
-		}
-
-		ts, err := template.ParseFiles(files...)
-
+		results, err := app.Snippets.Latest()
 		if err != nil {
-			app.ErrLog.Println(err.Error())
 			serverError(app, w, err)
+			return
 		}
 
-		err = ts.Execute(w, nil)
-		if err != nil {
-			app.ErrLog.Println(err.Error())
-			serverError(app, w, err)
-		}
+		render(app, w, r, "home.page.tmpl", &templateData{
+			Snippets: results,
+		})
 	}
 }
 
@@ -48,7 +39,19 @@ func showSnippet(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		fmt.Fprintf(w, "Display a specific snippet with ID %d...\n", id)
+		snippet, err := app.Snippets.Get(id)
+		if err == models.ErrNoRecord {
+			notFound(app, w)
+			return
+		} else if err != nil {
+			serverError(app, w, err)
+			return
+		}
+
+		// Use the new render helper.
+		render(app, w, r, "show.page.tmpl", &templateData{
+			Snippet: snippet,
+		})
 	}
 }
 
@@ -62,6 +65,16 @@ func createSnippet(app *config.Application) http.HandlerFunc {
 			clientError(app, w, http.StatusMethodNotAllowed)
 			return
 		}
-		w.Write([]byte("Create a new snippet...\n"))
+		title := "O snail"
+		content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi"
+		expires := "7"
+
+		id, err := app.Snippets.Insert(title, content, expires)
+		if err != nil {
+			serverError(app, w, err)
+			return
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 	}
 }
