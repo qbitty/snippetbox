@@ -6,7 +6,7 @@ import (
 	"github.com/qbitty/snippetbox/pkg/config"
 )
 
-func routes(app *config.Application) *http.ServeMux {
+func routes(app *config.Application) http.Handler {
 	// Use the http.NewServeMux() function to initialize a new servemux, then
 	// register the home function as the handler for the "/" URL pattern.
 	mux := http.NewServeMux()
@@ -16,5 +16,8 @@ func routes(app *config.Application) *http.ServeMux {
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	return mux
+	return recoverPanic(app, logRequest(app, secureHeaders(mux)))
+
+	// standardMiddleware := alice.New(secureHeaders)
+	// return standardMiddleware.Then(mux)
 }
