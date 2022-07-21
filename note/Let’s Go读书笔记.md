@@ -50,6 +50,20 @@
   ```
 
 - The sql.Open() function returns a sql.DB object. This isn’t a database connection — it’s a pool of many connections. This is an important difference to understand. Go manages these connections as needed, automatically opening and closing connections to the database via the driver.
+
 - The connection pool is safe for concurrent access, so you can use it from web application handlers safely.
+
 - The connection pool is intended to be long-lived. In a web application it’s normal to initialize the connection pool in your main() function and then pass the pool to your handlers. You shouldn’t call sql.Open() in a short-lived handler itself — it would be a waste of memory and network resources.
 
+  
+
+- Middleware：
+
+  1. 中间件若作用于http.ServeMux，则该中间件对所有请求都生效
+  2. 中间件若只作用于特定的用户自定义handler,则该中间件只对该特定的handler生效
+
+  
+
+- 任何为recover的panic都会导致应用程序崩溃推出
+- go语言不支持跨协程recover程序触发的panic
+- http请求所在的协程触发的panic会由go运行时自动recover，其他协程中的panic需要由用户手动recover

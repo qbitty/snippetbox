@@ -3,18 +3,20 @@ package main
 import (
 	"net/http"
 
+	"github.com/bmizerany/pat"
 	"github.com/qbitty/snippetbox/pkg/config"
 )
 
 func routes(app *config.Application) http.Handler {
 	// Use the http.NewServeMux() function to initialize a new servemux, then
 	// register the home function as the handler for the "/" URL pattern.
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home(app))
-	mux.HandleFunc("/snippet", showSnippet(app))
-	mux.HandleFunc("/snippet/create", createSnippet(app))
+	mux := pat.New()
+	mux.Get("/", http.HandlerFunc(home(app)))
+	mux.Get("/snippet/create", http.HandlerFunc(createSnippetForm(app)))
+	mux.Post("/snippet/create", http.HandlerFunc(createSnippet(app)))
+	mux.Get("/snippet/:id", http.HandlerFunc(showSnippet(app)))
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	mux.Get("/static/", http.StripPrefix("/static", fileServer))
 
 	return recoverPanic(app, logRequest(app, secureHeaders(mux)))
 
