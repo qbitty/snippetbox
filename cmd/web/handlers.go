@@ -76,6 +76,8 @@ func createSnippet(app *config.Application) http.HandlerFunc {
 			return
 		}
 
+		app.Session.Put(r, "flash", "Snippet successfully created!")
+
 		http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 	}
 }

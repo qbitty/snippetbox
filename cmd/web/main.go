@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/golangcollege/sessions"
 	"github.com/qbitty/snippetbox/pkg/config"
 	"github.com/qbitty/snippetbox/pkg/models/mysql"
 
@@ -22,7 +24,9 @@ func main() {
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
-	dns := flag.String("dns", "web:pass@/snippetbox?parseTime=true", "Mysql database dns")
+	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "Mysql database dsn")
+
+	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 
 	flag.Parse()
 
@@ -30,7 +34,7 @@ func main() {
 
 	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	db, err := openDB(*dns)
+	db, err := openDB(*dsn)
 	if err != nil {
 		errLog.Fatal(err)
 	}
@@ -43,9 +47,13 @@ func main() {
 		errLog.Fatal(err)
 	}
 
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+
 	app := &config.Application{
 		ErrLog:        errLog,
 		InfoLog:       infoLog,
+		Session:       session,
 		Snippets:      &mysql.SnippetModel{DB: db},
 		TemplateCache: templateCache,
 	}
@@ -69,8 +77,8 @@ func main() {
 	errLog.Fatal(err)
 }
 
-func openDB(dns string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dns)
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}

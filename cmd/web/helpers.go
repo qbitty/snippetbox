@@ -36,7 +36,7 @@ func render(app *config.Application, w http.ResponseWriter, r *http.Request, nam
 	// Write the template to the buffer, instead of straight to the
 	// http.ResponseWriter. If there's an error, call our serverError helper and
 	// return.
-	err := ts.Execute(buf, addDefaultData(td, r))
+	err := ts.Execute(buf, addDefaultData(app, td, r))
 	if err != nil {
 		serverError(app, w, err)
 		return
@@ -47,10 +47,11 @@ func render(app *config.Application, w http.ResponseWriter, r *http.Request, nam
 	buf.WriteTo(w)
 }
 
-func addDefaultData(td *templateData, r *http.Request) *templateData {
+func addDefaultData(app *config.Application, td *templateData, r *http.Request) *templateData {
 	if td == nil {
 		td = &templateData{}
 	}
 	td.CurrentYear = time.Now().Year()
+	td.Flash = app.Session.PopString(r, "flash")
 	return td
 }

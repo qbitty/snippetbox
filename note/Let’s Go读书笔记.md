@@ -64,6 +64,6 @@
 
   
 
-- 任何为recover的panic都会导致应用程序崩溃推出
+- 任何未recover的panic都会导致应用程序崩溃推出
 - go语言不支持跨协程recover程序触发的panic
 - http请求所在的协程触发的panic会由go运行时自动recover，其他协程中的panic需要由用户手动recover
