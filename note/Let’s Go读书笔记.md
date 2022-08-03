@@ -67,3 +67,13 @@
 - 任何未recover的panic都会导致应用程序崩溃推出
 - go语言不支持跨协程recover程序触发的panic
 - http请求所在的协程触发的panic会由go运行时自动recover，其他协程中的panic需要由用户手动recover
+
+
+
+
+
+
+
+Important: If you set ReadTimeout but don’t set IdleTimeout, then IdleTimeout will default to using the same setting as ReadTimeout. For instance, if you set ReadTimeout to 3 seconds, then there is the side-effect that all keep-alive connections will also be closed after 3 seconds of inactivity. Generally, my recommendation is to avoid any ambiguity and always set an explicit IdleTimeout value for your server.
+
+Warning: The ReadHeaderTimeout setting also affects the IdleTimeout behavior. Specifically, if you set ReadHeaderTimeout but don’t set ReadTimeout and don’t set IdleTimeout, then IdleTimeout will default to using the same setting as ReadHeaderTimeout. Again, it’s safest (and clearest) to simply get into the habit of setting an explicit IdleTimeout

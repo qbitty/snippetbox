@@ -7,24 +7,24 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/qbitty/snippetbox/pkg/config"
+	"github.com/justinas/nosurf"
 )
 
-func serverError(app *config.Application, w http.ResponseWriter, err error) {
+func serverError(app *application, w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.ErrLog.Output(2, trace)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
-func clientError(app *config.Application, w http.ResponseWriter, status int) {
+func clientError(app *application, w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func notFound(app *config.Application, w http.ResponseWriter) {
+func notFound(app *application, w http.ResponseWriter) {
 	clientError(app, w, http.StatusNotFound)
 }
 
-func render(app *config.Application, w http.ResponseWriter, r *http.Request, name string, td *templateData) {
+func render(app *application, w http.ResponseWriter, r *http.Request, name string, td *templateData) {
 	ts, ok := app.TemplateCache[name]
 	if !ok {
 		serverError(app, w, fmt.Errorf("The template %s does not exist", name))
@@ -47,11 +47,21 @@ func render(app *config.Application, w http.ResponseWriter, r *http.Request, nam
 	buf.WriteTo(w)
 }
 
-func addDefaultData(app *config.Application, td *templateData, r *http.Request) *templateData {
+func addDefaultData(app *application, td *templateData, r *http.Request) *templateData {
 	if td == nil {
 		td = &templateData{}
 	}
+	td.CSRFToken = nosurf.Token(r)
 	td.CurrentYear = time.Now().Year()
 	td.Flash = app.Session.PopString(r, "flash")
+	td.IsAuthenticated = isAuthenticated(app, r)
 	return td
+}
+
+func isAuthenticated(app *application, r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(contextKeyIsAuthenticated).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }

@@ -5,25 +5,30 @@ import (
 
 	"github.com/bmizerany/pat"
 	"github.com/justinas/alice"
-	"github.com/qbitty/snippetbox/pkg/config"
 )
 
-func routes(app *config.Application) http.Handler {
+func routes(app *application) http.Handler {
 	// Use the http.NewServeMux() function to initialize a new servemux, then
 	// register the home function as the handler for the "/" URL pattern.
 
-	dynamicMiddleware := alice.New(app.Session.Enable)
+	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	dynamicMiddleware := alice.New(app.Session.Enable, noSurf, app.authenticate)
 
 	mux := pat.New()
 	mux.Get("/", dynamicMiddleware.ThenFunc(home(app)))
-	mux.Get("/snippet/create", dynamicMiddleware.ThenFunc(createSnippetForm(app)))
-	mux.Post("/snippet/create", dynamicMiddleware.ThenFunc(createSnippet(app)))
+	mux.Get("/snippet/create", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(createSnippetForm(app)))
+	mux.Post("/snippet/create", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(createSnippet(app)))
 	mux.Get("/snippet/:id", dynamicMiddleware.ThenFunc(showSnippet(app)))
+
+	// Add the five new routes.
+	mux.Get("/user/signup", dynamicMiddleware.ThenFunc(signupUserForm(app)))
+	mux.Post("/user/signup", dynamicMiddleware.ThenFunc(signupUser(app)))
+	mux.Get("/user/login", dynamicMiddleware.ThenFunc(loginUserForm(app)))
+	mux.Post("/user/login", dynamicMiddleware.ThenFunc(loginUser(app)))
+	mux.Post("/user/logout", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(logoutUser(app)))
+
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))
 
-	return recoverPanic(app, logRequest(app, secureHeaders(mux)))
-
-	// standardMiddleware := alice.New(secureHeaders)
-	// return standardMiddleware.Then(mux)
+	return standardMiddleware.Then(mux)
 }

@@ -1,23 +1,32 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/golangcollege/sessions"
-	"github.com/qbitty/snippetbox/pkg/config"
 	"github.com/qbitty/snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type contextKey string
+
+const contextKeyIsAuthenticated = contextKey("isAuthenticated")
+
 type application struct {
-	infoLog *log.Logger
-	errLog  *log.Logger
+	ErrLog        *log.Logger
+	InfoLog       *log.Logger
+	Session       *sessions.Session
+	Snippets      *mysql.SnippetModel
+	Users         *mysql.UserModel
+	TemplateCache map[string]*template.Template
 }
 
 func main() {
@@ -49,31 +58,34 @@ func main() {
 
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
+	session.Secure = true
 
-	app := &config.Application{
+	app := &application{
 		ErrLog:        errLog,
 		InfoLog:       infoLog,
 		Session:       session,
 		Snippets:      &mysql.SnippetModel{DB: db},
+		Users:         &mysql.UserModel{DB: db},
 		TemplateCache: templateCache,
 	}
 
-	// Use the http.ListenAndServe() function to start a new web server. We pas
-	// two parameters: the TCP network address to listen on (in this case ":4000
-	// and the servemux we just created. If http.ListenAndServe() returns an er
-	// we use the log.Fatal() function to log the error message and exit.
-	// infoLog.Printf("Starting server on %s", *addr)
-	// err := http.ListenAndServe(*addr, mux)
-	// errLog.Fatal(err)
+	tlsConfig := &tls.Config{
+		PreferServerCipherSuites: true,
+		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
 
 	svr := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errLog,
-		Handler:  routes(app),
+		Addr:         *addr,
+		ErrorLog:     errLog,
+		Handler:      routes(app),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err = svr.ListenAndServe()
+	err = svr.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	errLog.Fatal(err)
 }
 
