@@ -77,3 +77,23 @@
 Important: If you set ReadTimeout but don’t set IdleTimeout, then IdleTimeout will default to using the same setting as ReadTimeout. For instance, if you set ReadTimeout to 3 seconds, then there is the side-effect that all keep-alive connections will also be closed after 3 seconds of inactivity. Generally, my recommendation is to avoid any ambiguity and always set an explicit IdleTimeout value for your server.
 
 Warning: The ReadHeaderTimeout setting also affects the IdleTimeout behavior. Specifically, if you set ReadHeaderTimeout but don’t set ReadTimeout and don’t set IdleTimeout, then IdleTimeout will default to using the same setting as ReadHeaderTimeout. Again, it’s safest (and clearest) to simply get into the habit of setting an explicit IdleTimeout
+
+
+
+
+
+the idea behind table-driven tests is to create a table of test cases containing the inputs and expected outputs, and to then loop over these, running each test case in a sub-test. There are a few ways you could set this up, but a common approach is to define your test cases in an slice of anonymous structs.
+
+
+
+One of these tools is the httptest.ResponseRecorder type. This is essentially an implementation of http.ResponseWriter which records the response status code, headers and body instead of actually writing them to a HTTP connection.
+
+
+
+you can even use the -run flag to limit testing to some specific sub-tests. For example:
+
+```go
+go test -v -run="^TestHumanDate$/^UTC|CET$" ./cmd/web
+```
+
+Note how, when it comes to running specific sub-tests, the value of the -run flag contains multiple regular expressions separated by a / character? The first part needs to match the name of the test, and the second part needs to match the name of the sub-test.

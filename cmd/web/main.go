@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golangcollege/sessions"
+	"github.com/qbitty/snippetbox/pkg/models"
 	"github.com/qbitty/snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -21,11 +22,19 @@ type contextKey string
 const contextKeyIsAuthenticated = contextKey("isAuthenticated")
 
 type application struct {
-	ErrLog        *log.Logger
-	InfoLog       *log.Logger
-	Session       *sessions.Session
-	Snippets      *mysql.SnippetModel
-	Users         *mysql.UserModel
+	ErrLog   *log.Logger
+	InfoLog  *log.Logger
+	Session  *sessions.Session
+	Snippets interface {
+		Insert(string, string, string) (int, error)
+		Get(int) (*models.Snippet, error)
+		Latest() ([]*models.Snippet, error)
+	}
+	Users interface {
+		Insert(string, string, string) error
+		Authenticate(string, string) (int, error)
+		Get(int) (*models.User, error)
+	}
 	TemplateCache map[string]*template.Template
 }
 
