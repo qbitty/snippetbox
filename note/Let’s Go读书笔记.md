@@ -2,22 +2,17 @@
 
 - 处理器(handler)： responsible for executing your application logic and for writing HTTP response headers and bodies.
 - 路由器(router)：stores a mapping between the URL patterns for your application and the corresponding handlers. Usually you have one servemux for your application containing all your routes
-
 - web服务器(web server)
 
-  
+#### Fixed Path and Subtree Patterns
 
 **Important: Go’s servemux treats the URL pattern "/" like a catch-all. So at the moment all HTTP requests will be handled by the home function regardless of their URL path. For instance, you can visit a different URL path like http://localhost:4000/foo, and you’ll receive exactly the same response. We’ll talk more about this in the next chapter.**
-
-
 
 - Go’s servemux supports two different types of URL patterns: fixed paths and subtree paths. Fixed paths don’t end with a trailing slash, whereas subtree paths do end with a trailing slash.
 
 - fixed path patterns like these are only matched (and the corresponding handler called) when the request URL path exactly matches the fixed path.
 
 - Subtree path patterns are matched (and the corresponding handler called) whenever the start of a request URL path matches the subtree path.
-
-  
 
 - In Go’s servemux, longer URL patterns always take precedence over shorter ones
 
@@ -97,3 +92,51 @@ go test -v -run="^TestHumanDate$/^UTC|CET$" ./cmd/web
 ```
 
 Note how, when it comes to running specific sub-tests, the value of the -run flag contains multiple regular expressions separated by a / character? The first part needs to match the name of the test, and the second part needs to match the name of the sub-test.
+
+
+
+
+
+- 视图层
+  - 模版技术
+  - Html,css,js/ts,
+- 协议层
+  - http
+  - https
+  - websocket
+  - rpc
+  - Json/protobuf
+- 中间件层
+  - 安全检查
+  - 日志记录
+  - 权限控制
+  - 统一异常处理
+  - 通用参数校验
+- 路由层
+  - 路由框架
+  - 路由规则
+  - 网关
+- 处理器层
+  - 参数校验
+  - 响应处理
+- 业务逻辑层
+  - 逻辑计算
+  - 事务控制
+- 存储层
+  - 缓存
+  - 持久化
+  - 数据同步
+- 测试
+  - 单元测试
+    1. 表驱动测试
+    2. 子测试
+    3. mock
+  - 基准测试
+  - 集成测试
+  - 测试驱动开发
+
+- 模式
+- 软件工程
+  - 项目组织结构
+  - 开发运维流程
+  - 系统服务架构

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/justinas/nosurf"
-)
+) 
 
 func serverError(app *application, w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
